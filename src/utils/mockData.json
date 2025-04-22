@@ -1,0 +1,22 @@
+{
+  "files": [
+    { "Key": "documents/report-2024.pdf", "Size": 3852000 },
+    { "Key": "documents/presentation.pptx", "Size": 2500000 },
+    { "Key": "images/profile.jpg", "Size": 450000 },
+    { "Key": "images/banner.png", "Size": 1200000 },
+    { "Key": "videos/intro.mp4", "Size": 15000000 },
+    { "Key": "data/users.csv", "Size": 250000 },
+    { "Key": "data/analytics.json", "Size": 180000 },
+    { "Key": "backups/database-2024-04-01.sql", "Size": 8500000 }
+  ],
+  "events": [
+    "User admin@example.com uploaded file documents/report-2024.pdf",
+    "Bucket policy updated by system administrator",
+    "New user james@company.com granted read access to bucket",
+    "File backups/database-2024-03-15.sql deleted by system cleanup",
+    "Storage limit warning: 85% of allocated storage used",
+    "User sarah@example.com downloaded file data/users.csv",
+    "Automatic backup completed successfully",
+    "File images/banner.png made public by admin@example.com"
+  ]
+}
