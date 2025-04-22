@@ -274,24 +274,6 @@ Below are some screenshots of the application in action:
 
 ---
 
-## Storing Screenshots
-
-All screenshots should be added to the `screenshots/` directory in the project root. Ensure the directory is committed to the repository so that the relative paths in the `README.md` file work correctly.
-
-### Adding Screenshots
-
-1. Create a directory called `screenshots/` in the project root if it doesn't already exist:
-
-   ```bash
-   mkdir screenshots
-   ```
-
-2. Save your screenshots in the `screenshots/` directory with appropriate file names (e.g., `dashboard.png`, `upload.png`, etc.).
-
-3. Reference the screenshots in the `README.md` file using relative paths (e.g., `screenshots/dashboard.png`).
-
----
-
 ## Contribution Guidelines for Screenshots
 
 - When contributing new features, include relevant screenshots in the `screenshots/` directory.
