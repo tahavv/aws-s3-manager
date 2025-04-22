@@ -1,0 +1,5 @@
+aws_region = "us-east-1"
+s3_bucket_name = "taha-ayari-bucket"
+sns_topic_name = "taha-ayari-sns-topic"
+sqs_queue_name = "taha-ayari-sqs-queue"
+notification_email = "taha.ayari@iteam-univ.tn"
