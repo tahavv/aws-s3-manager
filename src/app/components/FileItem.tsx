@@ -13,6 +13,8 @@ export default function FileItem({ file, onDeleteSuccess }: FileItemProps) {
   const [isDeleting, setIsDeleting] = useState(false);
   const [showActions, setShowActions] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+
+  const bucketName = process.env.NEXT_PUBLIC_S3_BUCKET_NAME || "default-bucket";
   
 
   // Format file size nicely
@@ -50,7 +52,7 @@ export default function FileItem({ file, onDeleteSuccess }: FileItemProps) {
         setIsDeleting(true);
         await fetch("/api/delete", {
           method: "DELETE",
-          body: JSON.stringify({ bucket: "your-bucket-name", key: file.Key }),
+          body: JSON.stringify({ bucket: bucketName, key: file.Key }),
         });
         onDeleteSuccess(file.Key);
       } catch (error) {

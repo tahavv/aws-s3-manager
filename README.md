@@ -1,182 +1,195 @@
-# AWS S3 Uploader and Manager with SQS and SNS
+# AWS S3 Uploader and Manager with Terraform Integration
 
-This project is a web-based application for managing files in an AWS S3 bucket. It provides capabilities for uploading, listing, and deleting files, while leveraging AWS services like **SQS (Simple Queue Service)** and **SNS (Simple Notification Service)** to handle notifications and events. The application also includes a real-time notification system to keep users updated about bucket activity.
+This project is an AWS S3 uploader and manager application that leverages **Terraform** for provisioning AWS resources such as S3 buckets, SNS topics, and SQS queues. The project integrates with `.env` files for configuration and uses Terraform outputs to seamlessly manage the created resources.
+
+---
 
 ## Features
 
-### 1. **File Management**
-- **Upload Files**: Upload files directly to an S3 bucket using a user-friendly interface.
-- **List Files**: View a list of all files in the bucket, including their metadata (e.g., size, name).
-- **Delete Files**: Remove unwanted files from the bucket.
-
-### 2. **Real-Time Notifications**
-- Notifications are displayed in a notification panel for actions such as file uploads, deletions, and errors.
-- The system uses **AWS SNS** to send push notifications and **AWS SQS** to queue events.
-
-### 3. **Dashboard**
-- A visually appealing dashboard displays:
-  - Total number of files.
-  - Total storage used in the bucket.
-  - Name of the active bucket.
-- Allows toggling between **mock data** and **real API calls** for development and testing.
-
-### 4. **Mock Data Support**
-- Developers can toggle between using mock data (from `utils/mockData.json`) and real AWS APIs for testing purposes.
-
-### 5. **Responsive Design**
-- The app is fully responsive and works seamlessly on both desktop and mobile devices.
-
----
-
-## Technologies Used
-
-### Frontend
-- **React.js**: Built with the modern React framework.
-- **Next.js**: Utilized for performance optimization and server-side rendering.
-- **Tailwind CSS**: For responsive and modern styling.
-- **Lucide Icons**: Used for intuitive and visually appealing icons in the UI.
-
-### Backend
-- **AWS S3**: For file storage.
-- **AWS SQS**: For event queuing.
-- **AWS SNS**: For real-time push notifications.
-
-### Other Tools
-- **Mock Data**: `utils/mockData.json` for development and testing.
-- **TypeScript**: Strongly typed development for better maintainability.
-
----
-
-## Folder Structure
-
-```
-src/
-├── app/
-│   ├── (main)/
-│   │   ├── dashboard/
-│   │   │   ├── page.tsx    # Main dashboard page
-│   │   ├── components/     # Reusable React components
-│   │   │   ├── Upload.tsx  # File upload component
-│   │   │   ├── ListFiles.tsx    # Component to list files
-│   │   │   ├── FileItem.tsx     # Individual file item component
-│   │   │   ├── NotificationsList.tsx  # Notifications panel
-│   │   │   ├── NotificationItem.tsx   # Single notification item
-├── utils/
-│   ├── aws/                # AWS-specific utilities
-│   │   ├── upload.ts       # AWS S3 upload logic
-│   │   ├── list.ts         # AWS S3 list files logic
-│   │   ├── delete.ts       # AWS S3 delete logic
-│   ├── mockData.json       # Mock data for development
-```
+- **File Management**:
+  - Upload, list, and delete files in an S3 bucket.
+- **Notifications**:
+  - Use SNS to send notifications.
+  - Subscribe SQS queues and email addresses to the SNS topic.
+- **Infrastructure as Code**:
+  - Automatically create and manage AWS resources using Terraform.
+  - Dynamically load environment-specific configurations via `.env` files.
 
 ---
 
 ## Prerequisites
 
-1. **AWS Account**: Ensure you have an active AWS account with permissions for S3, SQS, and SNS.
-2. **Environment Variables**: Configure the following environment variables in a `.env` file:
-   - `AWS_ACCESS_KEY_ID`: Your AWS access key.
-   - `AWS_SECRET_ACCESS_KEY`: Your AWS secret key.
-   - `AWS_REGION`: AWS region (e.g., `us-east-1`).
-   - `S3_BUCKET_NAME`: Name of the S3 bucket.
-   - `SQS_QUEUE_URL`: URL of the SQS queue.
-   - `SNS_TOPIC_ARN`: ARN of the SNS topic.
+1. **Tools**:
+   - [Node.js](https://nodejs.org) and npm.
+   - [Terraform CLI](https://developer.hashicorp.com/terraform/downloads).
+   - [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html).
+
+2. **AWS Account Configuration**:
+   - Set up an AWS account.
+   - Configure an AWS CLI profile (e.g., `aws configure`).
+
+3. **Environment Variables**:
+   - Prepare `.env` files for local, production, and development environments:
+     - `.env.local`
+     - `.env.production`
+     - `.env.development`
 
 ---
 
-## Installation
+## Project Setup
 
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/your-username/aws-s3-uploader.git
-   cd aws-s3-uploader
-   ```
+### 1. Clone the Repository
+```bash
+git clone https://github.com/your-username/aws-s3-uploader.git
+cd aws-s3-uploader
+```
 
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
+### 2. Install Dependencies
+```bash
+npm install
+```
 
-3. Create a `.env` file in the project root and add your AWS credentials and bucket information.
+### 3. Set Up Environment Variables
+Create `.env` files for your environment. For example:
 
-4. Start the development server:
-   ```bash
-   npm run dev
-   ```
-
-5. Open the application in your browser:
-   ```
-   http://localhost:3000
-   ```
-
----
-
-## Usage
-
-### 1. **Uploading Files**
-- Navigate to the "Upload" section on the dashboard.
-- Click "Choose File" and select a file from your system.
-- Click "Upload" to save the file to the S3 bucket.
-
-### 2. **Viewing Files**
-- Navigate to the "Files" section to view a list of all files in the bucket.
-- Metadata like file size and last modified date will be displayed.
-
-### 3. **Deleting Files**
-- Click the "Delete" button next to any file to remove it from the bucket.
-- A confirmation will appear in the notification panel.
-
-### 4. **Notifications**
-- Open the notification panel to view all recent activities (e.g., uploads, deletions).
-- Notifications are categorized by type (e.g., "Upload", "Delete").
+#### `.env.local`
+```plaintext
+AWS_REGION=us-east-1
+AWS_PROFILE=local-profile
+S3_BUCKET_NAME=my-local-bucket
+SNS_TOPIC_NAME=my-local-sns-topic
+SQS_QUEUE_NAME=my-local-sqs-queue
+NOTIFICATION_EMAIL=youremail@example.com
+```
 
 ---
 
-## Mock Data
+## Terraform Integration
 
-### When to Use Mock Data
-Mock data is useful during development when the AWS services are not set up or when you want to test the UI without making real API calls.
+### 1. Initialize Terraform
+Terraform is used to create AWS resources such as S3 buckets, SNS topics, and SQS queues.
 
-### How to Enable Mock Data
-1. Toggle the **"Use Mock Data"** checkbox in the dashboard.
-2. The system will start using `utils/mockData.json` for file lists and notifications.
+#### Directory Structure
+Terraform files are stored in the `terraform/` directory:
+```plaintext
+terraform/
+├── main.tf        # AWS resources definition
+├── variables.tf   # Input variables
+├── outputs.tf     # Outputs for created resources
+├── terraform.tfvars # Auto-generated variables (do not edit manually)
+```
+
+#### Generate `terraform.tfvars`
+Run the following command to dynamically generate the `terraform.tfvars` file based on the current `.env` file:
+
+```bash
+ENVIRONMENT=local node generate-tfvars.js
+```
+
+The `ENVIRONMENT` variable determines which `.env` file is used (e.g., `.env.local`, `.env.production`, `.env.development`).
 
 ---
 
-## Contributing
+### 2. Apply Terraform Configuration
 
-Contributions are welcome! To contribute:
+#### Initialize Terraform
+```bash
+cd terraform
+terraform init
+```
+
+#### Validate Configuration
+```bash
+terraform validate
+```
+
+#### Apply Configuration
+```bash
+terraform apply
+```
+- Review the plan and type `yes` to confirm.
+
+#### Example Outputs
+Once the Terraform configuration is applied, you will see outputs like this:
+```plaintext
+s3_bucket_name = "my-local-bucket"
+sns_topic_arn  = "arn:aws:sns:us-east-1:123456789012:my-local-sns-topic"
+sqs_queue_arn  = "arn:aws:sqs:us-east-1:123456789012:my-local-sqs-queue"
+```
+
+---
+
+### 3. Confirm Email Subscription
+If you added an email subscription to the SNS topic, check your inbox and confirm the subscription.
+
+---
+
+## Project Usage
+
+### Upload Files to S3
+1. Use the UI or API to upload files.
+2. Files will be stored in the configured S3 bucket.
+
+### Notifications
+- Publishing a message to the SNS topic will:
+  - Send an email to the subscribed address (if configured).
+  - Deliver the message to the subscribed SQS queue.
+
+---
+
+## Cleanup
+
+To destroy the resources created by Terraform, run:
+```bash
+terraform destroy
+```
+
+---
+
+## Directory Structure
+
+```plaintext
+project/
+├── src/                     # Application source code
+├── terraform/               # Terraform configuration files
+├── .env.local               # Local environment variables
+├── .env.production          # Production environment variables
+├── .env.development         # Development environment variables
+├── generate-tfvars.js       # Script to generate terraform.tfvars
+├── README.md                # Project documentation
+```
+
+---
+
+## Scripts
+
+### Generate `terraform.tfvars`
+```bash
+ENVIRONMENT=local node generate-tfvars.js
+```
+
+### Lint and Format Code
+```bash
+npm run lint
+npm run format
+```
+
+### Run the Application
+```bash
+npm run dev
+```
+
+---
+
+## Contribution Guidelines
 
 1. Fork the repository.
-2. Create a new branch:
-   ```bash
-   git checkout -b feature-name
-   ```
-3. Commit your changes:
-   ```bash
-   git commit -m "Add feature"
-   ```
-4. Push to your branch:
-   ```bash
-   git push origin feature-name
-   ```
-5. Open a pull request.
+2. Create a feature branch.
+3. Commit your changes.
+4. Create a pull request.
 
 ---
 
 ## License
 
-This project is licensed under the MIT License. See the `LICENSE` file for details.
-
----
-
-## Acknowledgments
-
-- **AWS**: For providing the cloud infrastructure.
-- **Next.js**: For the awesome React framework.
-- **Tailwind CSS**: For styling the application.
-- **Lucide Icons**: For the amazing icon set.
-
----
-
-## Screens
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.

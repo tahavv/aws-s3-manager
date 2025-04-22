@@ -9,6 +9,7 @@ interface Notification {
   message: string;
   timestamp: string;
   read: boolean;
+  rawData?: string;
 }
 
 interface NotificationsListProps {
@@ -20,7 +21,6 @@ export default function NotificationsList({ notifications }: NotificationsListPr
   const [unreadCount, setUnreadCount] = useState(0);
   const [displayedNotifications, setDisplayedNotifications] = useState<Notification[]>([]);
   
-  // Update unread count when notifications change
   useEffect(() => {
     setUnreadCount(notifications.length);
     setDisplayedNotifications(notifications);
@@ -35,7 +35,6 @@ export default function NotificationsList({ notifications }: NotificationsListPr
     setUnreadCount(0);
   };
 
-  // Animation effect for the bell icon when new notifications arrive
   useEffect(() => {
     if (unreadCount > 0) {
       const bellElement = document.getElementById("notification-bell");
@@ -51,7 +50,6 @@ export default function NotificationsList({ notifications }: NotificationsListPr
 
   return (
     <div className="relative">
-      {/* Floating notification button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="fixed bottom-6 right-6 bg-blue-500 hover:bg-blue-600 text-white p-3 rounded-full shadow-lg transition-all duration-300 z-50"
@@ -64,7 +62,6 @@ export default function NotificationsList({ notifications }: NotificationsListPr
         )}
       </button>
       
-      {/* Notifications panel */}
       <div 
         className={`fixed inset-y-0 right-0 max-w-sm w-full bg-white shadow-lg transform transition-transform duration-300 ease-in-out z-40 ${
           isOpen ? 'translate-x-0' : 'translate-x-full'

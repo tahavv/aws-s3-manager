@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { CloudLightning, Settings, User, RefreshCw, ExternalLink, PieChart, Database } from "lucide-react";
+import { CloudLightning, Settings, User, RefreshCw, ExternalLink, PieChart, Database, X } from "lucide-react";
 import ModernUpload from "@/app/components/ModernUpload";
 import ListFiles from "@/app/components/ListFiles";
 import NotificationsList from "@/app/components/NotificationsList";
@@ -9,10 +9,11 @@ import mockData from "@/utils/mockData.json"; // Import mock data
 
 export default function DashboardPage() {
   const [files, setFiles] = useState<{ Key: string; Size: number }[]>([]);
-  const [notifications, setNotifications] = useState<{ id: string; message: string; timestamp: string; read: boolean }[]>([]);
+  const [notifications, setNotifications] = useState<{ id: string; message: string; timestamp: string; read: boolean, rawData?: any }[]>([]);
   const [refreshing, setRefreshing] = useState(false);
-  const [bucketName, setBucketName] = useState("your-bucket-name");
-  const [useMockData, setUseMockData] = useState(false); // State to toggle between mock and API data
+  const [useMockData, setUseMockData] = useState(false);
+  const [selectedNotification, setSelectedNotification] = useState<{ id: string; message: string; timestamp: string; read: boolean, rawData?: any } | null>(null);
+  const [showDialog, setShowDialog] = useState(false);
   const [stats, setStats] = useState<{
     totalFiles: number;
     totalSize: number;
@@ -20,8 +21,14 @@ export default function DashboardPage() {
   }>({
     totalFiles: 0,
     totalSize: 0,
-    lastUpload: null
+    lastUpload: null,
   });
+
+  // Load environment variables
+  const bucketName = process.env.NEXT_PUBLIC_S3_BUCKET_NAME || "default-bucket";
+  const snsTopicName = process.env.NEXT_PUBLIC_SNS_TOPIC_NAME || "default-sns-topic";
+  const sqsQueueName = process.env.NEXT_PUBLIC_SQS_QUEUE_NAME || "default-sqs-queue";
+  const notificationEmail = process.env.NEXT_PUBLIC_NOTIFICATION_EMAIL || "default@email.com";
 
   const fetchFiles = async () => {
     setRefreshing(true);
@@ -40,72 +47,84 @@ export default function DashboardPage() {
       setFiles(data);
 
       // Calculate stats
-      const totalSize = data.reduce((sum:any, file:any) => sum + file.Size, 0);
+      const totalSize = data.reduce((sum: any, file: any) => sum + file.Size, 0);
       const lastUpload = data.length > 0 ? new Date().toLocaleDateString() : null;
 
       setStats({
         totalFiles: data.length,
         totalSize,
-        lastUpload
+        lastUpload,
       });
 
       // Add notification for successful refresh
-      setNotifications(prev => [
+      setNotifications((prev) => [
         { id: crypto.randomUUID(), message: `Files refreshed successfully`, timestamp: new Date().toISOString(), read: false },
-        ...prev
+        ...prev,
       ]);
     } catch (error) {
       console.error("Error fetching files:", error);
-      setNotifications(prev => [
+      setNotifications((prev) => [
         { id: crypto.randomUUID(), message: `Error refreshing files: ${error instanceof Error ? error.message : "Unknown error"}`, timestamp: new Date().toISOString(), read: false },
-        ...prev
+        ...prev,
       ]);
     } finally {
-      setIsLoading(false);
       setRefreshing(false);
     }
   };
 
+  const pollNotifications = async () => {
+    try {
+      const response = await fetch(`/api/notifications`);
+      if (!response.ok) throw new Error("Failed to fetch notifications");
+
+      const newNotifications = await response.json();
+      const formattedNotifications = newNotifications.map((notif: any) => {
+        const parsedMessage = JSON.parse(notif.message);
+        const informativeMessage = parsedMessage.Message
+          ? JSON.parse(parsedMessage.Message).Records[0]
+          : {};
+
+        return {
+          id: notif.id,
+          message: `Event: ${informativeMessage.eventName} | Bucket: ${informativeMessage.s3?.bucket.name} | Object: ${informativeMessage.s3?.object.key}`,
+          timestamp: notif.timestamp,
+          read: false,
+          rawData: parsedMessage
+        };
+      });
+
+      setNotifications((prev) => [...formattedNotifications, ...prev]);
+    } catch (error) {
+      setNotifications((prev) => [
+        { id: crypto.randomUUID(), message: `Error polling notifications`, timestamp: new Date().toISOString(), read: false },
+        ...prev,
+      ]);
+    }
+  };
+
   useEffect(() => {
-    let eventCounter = 0;
     fetchFiles();
 
-    // Simulate SSE for notifications if using mock data
-    if (useMockData) {
-      const timer = setInterval(() => {
-        if (eventCounter < mockData.events.length) {
-          setNotifications(prev => [
-            { id: crypto.randomUUID(), message: mockData.events[eventCounter], timestamp: new Date().toISOString(), read: false },
-            ...prev
-          ]);
-          eventCounter++;
-        } else {
-          clearInterval(timer);
-        }
-      }, 8000); // Add a new notification every 8 seconds
+    const interval = setInterval(() => {
+      pollNotifications();
+    }, 30000); 
 
-      return () => clearInterval(timer);
-    }
-  }, [useMockData]);
+    return () => clearInterval(interval);
+  }, []);
 
   const handleRefresh = () => {
     fetchFiles();
+    pollNotifications();
   };
 
   const handleUploadSuccess = () => {
-    setNotifications(prev => [
-      { id: crypto.randomUUID(), message: `File uploaded successfully`, timestamp: new Date().toISOString(), read: false },
-      ...prev
-    ]);
     fetchFiles();
+    pollNotifications();
   };
 
   const handleDeleteSuccess = () => {
-    setNotifications(prev => [
-      { id: crypto.randomUUID(), message: `File deleted successfully`, timestamp: new Date().toISOString(), read: false },
-      ...prev
-    ]);
     fetchFiles();
+    pollNotifications();
   };
 
   const formatBytes = (bytes: number) => {
@@ -118,6 +137,52 @@ export default function DashboardPage() {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
   };
 
+
+  const formatJsonData = (data) => {
+    if (!data) return "";
+    try {
+      const jsonObj = typeof data === 'string' ? JSON.parse(data) : data;
+            const deepParse = (obj) => {
+        if (typeof obj !== 'object' || obj === null) {
+          if (typeof obj === 'string') {
+            try {
+              return deepParse(JSON.parse(obj));
+            } catch (e) {
+              return obj;
+            }
+          }
+          return obj;
+        }
+        
+        if (Array.isArray(obj)) {
+          return obj.map(item => deepParse(item));
+        }
+        
+        const result = {};
+        for (const key in obj) {
+          result[key] = deepParse(obj[key]);
+        }
+        return result;
+      };
+      
+      const cleanedData = deepParse(jsonObj);
+      return JSON.stringify(cleanedData, null, 2);
+    } catch (e) {
+      console.error("Error formatting JSON:", e);
+      return typeof data === 'string' ? data : JSON.stringify(data, null, 2);
+    }
+  };
+
+  const viewNotificationDetails = (notification) => {
+    setSelectedNotification(notification);
+    setShowDialog(true);
+  };
+
+  const closeDialog = () => {
+    setShowDialog(false);
+    setSelectedNotification(null);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white shadow-sm">
@@ -125,7 +190,7 @@ export default function DashboardPage() {
           <div className="flex justify-between items-center">
             <div className="flex items-center">
               <CloudLightning className="h-8 w-8 text-blue-500" />
-              <h1 className="ml-2 text-xl font-bold text-gray-900">AWS S3 Dashboard</h1>
+              <h1 className="ml-2 text-xl font-bold text-gray-900">AWS S3 Manager</h1>
             </div>
 
             <div className="flex items-center space-x-4">
@@ -225,11 +290,23 @@ export default function DashboardPage() {
               <div className="max-h-96 overflow-y-auto">
                 {notifications.length > 0 ? (
                   notifications.slice(0, 10).map((notification, index) => (
-                    <div key={index} className="mb-3 border-l-4 border-blue-500 pl-3 py-1">
-                      <p className="text-sm text-gray-700">{notification.message}</p>
-                      <p className="text-xs text-gray-500 mt-1">
-                        {new Date(notification.timestamp).toLocaleTimeString()}
-                      </p>
+                    <div key={index} className="mb-3 border-l-4 border-blue-500 pl-3 py-1 group">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <p className="text-sm text-gray-700">{notification.message}</p>
+                          <p className="text-xs text-gray-500 mt-1">
+                            {new Date(notification.timestamp).toLocaleTimeString()}
+                          </p>
+                        </div>
+                        {notification.rawData && (
+                          <button 
+                            onClick={() => viewNotificationDetails(notification)}
+                            className="text-blue-500 hover:text-blue-700 text-xs px-2 py-1 rounded hover:bg-blue-100 transition-colors opacity-0 group-hover:opacity-100"
+                          >
+                            View
+                          </button>
+                        )}
+                      </div>
                     </div>
                   ))
                 ) : (
@@ -243,11 +320,40 @@ export default function DashboardPage() {
         </div>
       </main>
 
+      {/* Popup Dialog for Activity Details */}
+      {showDialog && selectedNotification && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+          <div className="bg-white rounded-lg shadow-lg w-full max-w-xl max-h-screen overflow-hidden">
+            <div className="flex justify-between items-center border-b p-4">
+              <h3 className="font-medium text-lg">{selectedNotification.message}</h3>
+              <button 
+                onClick={closeDialog}
+                className="p-1 hover:bg-gray-200 rounded-full transition-colors"
+              >
+                <X size={20} className="text-gray-500" />
+              </button>
+            </div>
+            <div className="p-4 overflow-auto max-h-96">
+              <h4 className="text-sm font-medium text-gray-700 mb-2">Notification Details</h4>
+              <div className="bg-gray-100 rounded-md p-4 overflow-auto">
+                <pre className="text-xs text-gray-800 whitespace-pre-wrap">
+                  {selectedNotification.rawData && formatJsonData(selectedNotification.rawData)}
+                </pre>
+              </div>
+            </div>
+            <div className="border-t p-3 flex justify-end">
+              <button 
+                onClick={closeDialog}
+                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <NotificationsList notifications={notifications} />
     </div>
   );
-}
-
-function setIsLoading(arg0: boolean) {
-  throw new Error("Function not implemented.");
 }

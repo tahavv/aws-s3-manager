@@ -12,14 +12,16 @@ export default function ModernUpload({ onUploadSuccess }: ModernUploadProps) {
   const [status, setStatus] = useState({ type: "", message: "" });
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleFileChange = (e:any) => {
+  const bucketName = process.env.NEXT_PUBLIC_S3_BUCKET_NAME || "default-bucket";
+
+  const handleFileChange = (e: any) => {
     if (e.target.files?.[0]) {
       setFile(e.target.files[0]);
       setStatus({ type: "", message: "" });
     }
   };
 
-  const handleDragOver = (e:any) => {
+  const handleDragOver = (e: any) => {
     e.preventDefault();
     setIsDragging(true);
   };
@@ -28,10 +30,10 @@ export default function ModernUpload({ onUploadSuccess }: ModernUploadProps) {
     setIsDragging(false);
   };
 
-  const handleDrop = (e:any) => {
+  const handleDrop = (e: any) => {
     e.preventDefault();
     setIsDragging(false);
-    
+
     if (e.dataTransfer.files?.[0]) {
       setFile(e.dataTransfer.files[0]);
       setStatus({ type: "", message: "" });
@@ -51,26 +53,34 @@ export default function ModernUpload({ onUploadSuccess }: ModernUploadProps) {
     try {
       setIsUploading(true);
       setStatus({ type: "", message: "" });
-      
-      // Mock the FileReader to convert the file to arrayBuffer
+
+      // Convert the file to a Base64 string
       const arrayBuffer = await new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.onload = () => resolve(reader.result);
         reader.onerror = reject;
         reader.readAsArrayBuffer(file);
       });
-      
+
+      const base64File = btoa(
+        new Uint8Array(arrayBuffer as ArrayBuffer)
+          .reduce((data, byte) => data + String.fromCharCode(byte), "")
+      );
+
       const response = await fetch("/api/upload", {
         method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify({
-          bucket: "your-bucket-name",
+          bucket: bucketName,
           key: file.name,
-          file: arrayBuffer,
+          file: base64File,
         }),
       });
 
       const result = await response.json();
-      
+
       if (response.ok) {
         setStatus({ type: "success", message: "File uploaded successfully!" });
         setFile(null);
@@ -91,11 +101,14 @@ export default function ModernUpload({ onUploadSuccess }: ModernUploadProps) {
         <Upload className="mr-2 text-blue-500" size={20} />
         Upload File
       </h2>
-      
+
       <div
         className={`border-2 border-dashed rounded-lg p-8 mb-4 transition-colors duration-300 ${
-          isDragging ? "border-blue-500 bg-blue-50" : 
-          file ? "border-green-400 bg-green-50" : "border-gray-300 hover:border-blue-400"
+          isDragging
+            ? "border-blue-500 bg-blue-50"
+            : file
+            ? "border-green-400 bg-green-50"
+            : "border-gray-300 hover:border-blue-400"
         }`}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
@@ -126,7 +139,7 @@ export default function ModernUpload({ onUploadSuccess }: ModernUploadProps) {
                   </p>
                 </div>
               </div>
-              <button 
+              <button
                 onClick={(e) => {
                   e.stopPropagation();
                   clearFile();
@@ -158,9 +171,25 @@ export default function ModernUpload({ onUploadSuccess }: ModernUploadProps) {
         >
           {isUploading ? (
             <>
-              <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              <svg
+                className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                ></circle>
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                ></path>
               </svg>
               Uploading...
             </>
@@ -168,11 +197,13 @@ export default function ModernUpload({ onUploadSuccess }: ModernUploadProps) {
             "Upload File"
           )}
         </button>
-        
+
         {status.message && (
-          <div className={`flex items-center ${
-            status.type === "error" ? "text-red-500" : "text-green-500"
-          }`}>
+          <div
+            className={`flex items-center ${
+              status.type === "error" ? "text-red-500" : "text-green-500"
+            }`}
+          >
             {status.type === "error" ? (
               <AlertCircle size={16} className="mr-1" />
             ) : (

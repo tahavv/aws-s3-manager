@@ -6,6 +6,9 @@ export default function UploadPage() {
   const [file, setFile] = useState<File | null>(null);
   const [message, setMessage] = useState("");
 
+  const bucketName = process.env.NEXT_PUBLIC_S3_BUCKET_NAME || "default-bucket";
+
+
   const handleUpload = async () => {
     if (!file) return;
     const formData = new FormData();
@@ -14,7 +17,7 @@ export default function UploadPage() {
     const response = await fetch("/api/upload", {
       method: "POST",
       body: JSON.stringify({
-        bucket: "your-bucket-name",
+        bucket: bucketName,
         key: file.name,
         file: await file.arrayBuffer(),
       }),
