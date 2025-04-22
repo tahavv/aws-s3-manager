@@ -5,15 +5,18 @@ This project is a web-based application for managing files in an AWS S3 bucket. 
 ## Features
 
 ### 1. **File Management**
+
 - **Upload Files**: Upload files directly to an S3 bucket using a user-friendly interface.
 - **List Files**: View a list of all files in the bucket, including their metadata (e.g., size, name).
 - **Delete Files**: Remove unwanted files from the bucket.
 
 ### 2. **Real-Time Notifications**
+
 - Notifications are displayed in a notification panel for actions such as file uploads, deletions, and errors.
 - The system uses **AWS SNS** to send push notifications and **AWS SQS** to queue events.
 
 ### 3. **Dashboard**
+
 - A visually appealing dashboard displays:
   - Total number of files.
   - Total storage used in the bucket.
@@ -21,9 +24,11 @@ This project is a web-based application for managing files in an AWS S3 bucket. 
 - Allows toggling between **mock data** and **real API calls** for development and testing.
 
 ### 4. **Mock Data Support**
+
 - Developers can toggle between using mock data (from `utils/mockData.json`) and real AWS APIs for testing purposes.
 
 ### 5. **Responsive Design**
+
 - The app is fully responsive and works seamlessly on both desktop and mobile devices.
 
 ---
@@ -31,17 +36,20 @@ This project is a web-based application for managing files in an AWS S3 bucket. 
 ## Technologies Used
 
 ### Frontend
+
 - **React.js**: Built with the modern React framework.
 - **Next.js**: Utilized for performance optimization and server-side rendering.
 - **Tailwind CSS**: For responsive and modern styling.
 - **Lucide Icons**: Used for intuitive and visually appealing icons in the UI.
 
 ### Backend
+
 - **AWS S3**: For file storage.
 - **AWS SQS**: For event queuing.
 - **AWS SNS**: For real-time push notifications.
 
 ### Infrastructure as Code
+
 - **Terraform**: Used for creating and managing AWS resources like S3, SQS, and SNS.
 
 ---
@@ -75,42 +83,53 @@ src/
 **Terraform** scripts are provided to automate the creation and configuration of AWS resources required for this project. This includes:
 
 ### Resources Created
+
 1. **S3 Bucket**
+
    - Used for file storage.
    - Configured with event notifications for SNS.
 
 2. **SQS Queue**
+
    - Used for queuing notifications from SNS.
 
 3. **SNS Topic**
    - Used for sending notifications about S3 bucket events.
 
 ### Terraform Scripts
+
 The Terraform configuration is located in the `terraform/` directory and includes:
+
 - `main.tf`: Defines the S3 bucket, SQS queue, and SNS topic.
 - `variables.tf`: Defines configurable variables like bucket name, region, and tags.
 - `outputs.tf`: Outputs the created resource ARNs and URLs.
 
 ### How to Execute Terraform
+
 1. Navigate to the `terraform/` directory:
+
    ```bash
    cd terraform
    ```
 
 2. Initialize Terraform:
+
    ```bash
    terraform init
    ```
 
 3. Plan the infrastructure:
+
    ```bash
    terraform plan
    ```
 
 4. Apply the infrastructure:
+
    ```bash
    terraform apply
    ```
+
    - You will be prompted to confirm. Type `yes` to proceed.
 
 5. Once the infrastructure is created, note down the output values (e.g., bucket name, SQS URL, SNS ARN).
@@ -133,12 +152,14 @@ The Terraform configuration is located in the `terraform/` directory and include
 ## Installation
 
 1. Clone the repository:
+
    ```bash
    git clone https://github.com/tahavv/aws-s3-manager.git
    cd aws-s3-manager
    ```
 
 2. Install dependencies:
+
    ```bash
    npm install
    ```
@@ -146,6 +167,7 @@ The Terraform configuration is located in the `terraform/` directory and include
 3. Create a `.env` file in the project root and add your AWS credentials and bucket information.
 
 4. Start the development server:
+
    ```bash
    npm run dev
    ```
@@ -160,19 +182,23 @@ The Terraform configuration is located in the `terraform/` directory and include
 ## Usage
 
 ### 1. **Uploading Files**
+
 - Navigate to the "Upload" section on the dashboard.
 - Click "Choose File" and select a file from your system.
 - Click "Upload" to save the file to the S3 bucket.
 
 ### 2. **Viewing Files**
+
 - Navigate to the "Files" section to view a list of all files in the bucket.
 - Metadata like file size and last modified date will be displayed.
 
 ### 3. **Deleting Files**
+
 - Click the "Delete" button next to any file to remove it from the bucket.
 - A confirmation will appear in the notification panel.
 
 ### 4. **Notifications**
+
 - Open the notification panel to view all recent activities (e.g., uploads, deletions).
 - Notifications are categorized by type (e.g., "Upload", "Delete").
 - Click "View" on a notification to see the full formatted JSON details.
@@ -182,9 +208,11 @@ The Terraform configuration is located in the `terraform/` directory and include
 ## Mock Data
 
 ### When to Use Mock Data
+
 Mock data is useful during development when the AWS services are not set up or when you want to test the UI without making real API calls.
 
 ### How to Enable Mock Data
+
 1. Toggle the **"Use Mock Data"** checkbox in the dashboard.
 2. The system will start using `utils/mockData.json` for file lists and notifications.
 
@@ -223,3 +251,49 @@ This project is licensed under the MIT License. See the `LICENSE` file for detai
 - **Next.js**: For the awesome React framework.
 - **Tailwind CSS**: For styling the application.
 - **Lucide Icons**: For the amazing icon set.
+
+## Screenshots
+
+Below are some screenshots of the application in action:
+
+### 1. **Dashboard**
+
+![Dashboard Screenshot](screenshots/dashboard.png)
+
+### 2. **Uploading Files**
+
+![Uploading Files Screenshot](screenshots/upload.png)
+
+### 3. **Notification Panel**
+
+![Notification Panel Screenshot](screenshots/notifications.png)
+
+### 4. **Detailed Notification View**
+
+![Formatted JSON View Screenshot](screenshots/formatted-json-view.png)
+
+---
+
+## Storing Screenshots
+
+All screenshots should be added to the `screenshots/` directory in the project root. Ensure the directory is committed to the repository so that the relative paths in the `README.md` file work correctly.
+
+### Adding Screenshots
+
+1. Create a directory called `screenshots/` in the project root if it doesn't already exist:
+
+   ```bash
+   mkdir screenshots
+   ```
+
+2. Save your screenshots in the `screenshots/` directory with appropriate file names (e.g., `dashboard.png`, `upload.png`, etc.).
+
+3. Reference the screenshots in the `README.md` file using relative paths (e.g., `screenshots/dashboard.png`).
+
+---
+
+## Contribution Guidelines for Screenshots
+
+- When contributing new features, include relevant screenshots in the `screenshots/` directory.
+- Use clear, high-quality images in `.png` format.
+- Update the **Screenshots** section in the `README.md` file to include your new screenshots.

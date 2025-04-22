@@ -1,7 +1,10 @@
 {
   "name": "aws-s3-uploader",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "private": true,
+  "author": "Taha Ayari <taha.ayari@iteam-univ.tn> (https://tahavv.github.io/tahavv/)",
+  "license": "MIT",
+  "contributors": [],
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build",
