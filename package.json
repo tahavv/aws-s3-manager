@@ -14,6 +14,7 @@
     "start:dev": "cross-env NEXT_PUBLIC_ENV=development next start",
     "start:prod": "cross-env NEXT_PUBLIC_ENV=production next start",
     "lint": "eslint . --ext .ts,.tsx",
+    "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
     "prepare": "husky install",
     "check-types": "tsc --noEmit"
