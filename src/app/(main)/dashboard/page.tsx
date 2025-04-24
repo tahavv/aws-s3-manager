@@ -1,18 +1,35 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import { CloudLightning, Settings, User, RefreshCw, ExternalLink, PieChart, Database, X } from "lucide-react";
-import ModernUpload from "@/app/components/ModernUpload";
-import ListFiles from "@/app/components/ListFiles";
-import NotificationsList from "@/app/components/NotificationsList";
-import mockData from "@/utils/mockData.json"; // Import mock data
+import { useState, useEffect } from 'react';
+import {
+  CloudLightning,
+  Settings,
+  User,
+  RefreshCw,
+  ExternalLink,
+  PieChart,
+  Database,
+  X,
+} from 'lucide-react';
+import ModernUpload from '@/app/components/ModernUpload';
+import ListFiles from '@/app/components/ListFiles';
+import NotificationsList from '@/app/components/NotificationsList';
+import mockData from '@/utils/mockData.json';
 
 export default function DashboardPage() {
   const [files, setFiles] = useState<{ Key: string; Size: number }[]>([]);
-  const [notifications, setNotifications] = useState<{ id: string; message: string; timestamp: string; read: boolean, rawData?: any }[]>([]);
+  const [notifications, setNotifications] = useState<
+    { id: string; message: string; timestamp: string; read: boolean; rawData?: any }[]
+  >([]);
   const [refreshing, setRefreshing] = useState(false);
   const [useMockData, setUseMockData] = useState(false);
-  const [selectedNotification, setSelectedNotification] = useState<{ id: string; message: string; timestamp: string; read: boolean, rawData?: any } | null>(null);
+  const [selectedNotification, setSelectedNotification] = useState<{
+    id: string;
+    message: string;
+    timestamp: string;
+    read: boolean;
+    rawData?: any;
+  } | null>(null);
   const [showDialog, setShowDialog] = useState(false);
   const [stats, setStats] = useState<{
     totalFiles: number;
@@ -25,28 +42,25 @@ export default function DashboardPage() {
   });
 
   // Load environment variables
-  const bucketName = process.env.NEXT_PUBLIC_S3_BUCKET_NAME || "default-bucket";
-  const snsTopicName = process.env.NEXT_PUBLIC_SNS_TOPIC_NAME || "default-sns-topic";
-  const sqsQueueName = process.env.NEXT_PUBLIC_SQS_QUEUE_NAME || "default-sqs-queue";
-  const notificationEmail = process.env.NEXT_PUBLIC_NOTIFICATION_EMAIL || "default@email.com";
+  const bucketName = process.env.NEXT_PUBLIC_S3_BUCKET_NAME || 'default-bucket';
+  const snsTopicName = process.env.NEXT_PUBLIC_SNS_TOPIC_NAME || 'default-sns-topic';
+  const sqsQueueName = process.env.NEXT_PUBLIC_SQS_QUEUE_NAME || 'default-sqs-queue';
+  const notificationEmail = process.env.NEXT_PUBLIC_NOTIFICATION_EMAIL || 'default@email.com';
 
   const fetchFiles = async () => {
     setRefreshing(true);
     try {
       let data;
       if (useMockData) {
-        // Use mock data
         data = mockData.files;
       } else {
-        // Fetch from API
         const response = await fetch(`/api/list?bucket=${bucketName}`);
-        if (!response.ok) throw new Error("Failed to fetch files");
+        if (!response.ok) throw new Error('Failed to fetch files');
         data = await response.json();
       }
 
       setFiles(data);
 
-      // Calculate stats
       const totalSize = data.reduce((sum: any, file: any) => sum + file.Size, 0);
       const lastUpload = data.length > 0 ? new Date().toLocaleDateString() : null;
 
@@ -58,13 +72,23 @@ export default function DashboardPage() {
 
       // Add notification for successful refresh
       setNotifications((prev) => [
-        { id: crypto.randomUUID(), message: `Files refreshed successfully`, timestamp: new Date().toISOString(), read: false },
+        {
+          id: crypto.randomUUID(),
+          message: `Files refreshed successfully`,
+          timestamp: new Date().toISOString(),
+          read: false,
+        },
         ...prev,
       ]);
     } catch (error) {
-      console.error("Error fetching files:", error);
+      console.error('Error fetching files:', error);
       setNotifications((prev) => [
-        { id: crypto.randomUUID(), message: `Error refreshing files: ${error instanceof Error ? error.message : "Unknown error"}`, timestamp: new Date().toISOString(), read: false },
+        {
+          id: crypto.randomUUID(),
+          message: `Error refreshing files: ${error instanceof Error ? error.message : 'Unknown error'}`,
+          timestamp: new Date().toISOString(),
+          read: false,
+        },
         ...prev,
       ]);
     } finally {
@@ -75,7 +99,7 @@ export default function DashboardPage() {
   const pollNotifications = async () => {
     try {
       const response = await fetch(`/api/notifications`);
-      if (!response.ok) throw new Error("Failed to fetch notifications");
+      if (!response.ok) throw new Error('Failed to fetch notifications');
 
       const newNotifications = await response.json();
       const formattedNotifications = newNotifications.map((notif: any) => {
@@ -89,14 +113,19 @@ export default function DashboardPage() {
           message: `Event: ${informativeMessage.eventName} | Bucket: ${informativeMessage.s3?.bucket.name} | Object: ${informativeMessage.s3?.object.key}`,
           timestamp: notif.timestamp,
           read: false,
-          rawData: parsedMessage
+          rawData: parsedMessage,
         };
       });
 
       setNotifications((prev) => [...formattedNotifications, ...prev]);
     } catch (error) {
       setNotifications((prev) => [
-        { id: crypto.randomUUID(), message: `Error polling notifications`, timestamp: new Date().toISOString(), read: false },
+        {
+          id: crypto.randomUUID(),
+          message: `Error polling notifications`,
+          timestamp: new Date().toISOString(),
+          read: false,
+        },
         ...prev,
       ]);
     }
@@ -107,7 +136,7 @@ export default function DashboardPage() {
 
     const interval = setInterval(() => {
       pollNotifications();
-    }, 30000); 
+    }, 30000);
 
     return () => clearInterval(interval);
   }, []);
@@ -128,21 +157,20 @@ export default function DashboardPage() {
   };
 
   const formatBytes = (bytes: number) => {
-    if (bytes === 0) return "0 Bytes";
+    if (bytes === 0) return '0 Bytes';
 
     const k = 1024;
-    const sizes = ["Bytes", "KB", "MB", "GB", "TB"];
+    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
 
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
-
   const formatJsonData = (data) => {
-    if (!data) return "";
+    if (!data) return '';
     try {
       const jsonObj = typeof data === 'string' ? JSON.parse(data) : data;
-            const deepParse = (obj) => {
+      const deepParse = (obj) => {
         if (typeof obj !== 'object' || obj === null) {
           if (typeof obj === 'string') {
             try {
@@ -153,22 +181,22 @@ export default function DashboardPage() {
           }
           return obj;
         }
-        
+
         if (Array.isArray(obj)) {
-          return obj.map(item => deepParse(item));
+          return obj.map((item) => deepParse(item));
         }
-        
+
         const result = {};
         for (const key in obj) {
           result[key] = deepParse(obj[key]);
         }
         return result;
       };
-      
+
       const cleanedData = deepParse(jsonObj);
       return JSON.stringify(cleanedData, null, 2);
     } catch (e) {
-      console.error("Error formatting JSON:", e);
+      console.error('Error formatting JSON:', e);
       return typeof data === 'string' ? data : JSON.stringify(data, null, 2);
     }
   };
@@ -199,7 +227,7 @@ export default function DashboardPage() {
                 className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors flex items-center"
                 disabled={refreshing}
               >
-                <RefreshCw size={20} className={refreshing ? "animate-spin" : ""} />
+                <RefreshCw size={20} className={refreshing ? 'animate-spin' : ''} />
               </button>
 
               <button className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors">
@@ -250,7 +278,9 @@ export default function DashboardPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-500">Total Storage</p>
-                <h3 className="text-3xl font-bold text-gray-900 mt-1">{formatBytes(stats.totalSize)}</h3>
+                <h3 className="text-3xl font-bold text-gray-900 mt-1">
+                  {formatBytes(stats.totalSize)}
+                </h3>
               </div>
               <div className="p-3 bg-green-100 rounded-full">
                 <PieChart className="h-6 w-6 text-green-600" />
@@ -299,7 +329,7 @@ export default function DashboardPage() {
                           </p>
                         </div>
                         {notification.rawData && (
-                          <button 
+                          <button
                             onClick={() => viewNotificationDetails(notification)}
                             className="text-blue-500 hover:text-blue-700 text-xs px-2 py-1 rounded hover:bg-blue-100 transition-colors opacity-0 group-hover:opacity-100"
                           >
@@ -326,7 +356,7 @@ export default function DashboardPage() {
           <div className="bg-white rounded-lg shadow-lg w-full max-w-xl max-h-screen overflow-hidden">
             <div className="flex justify-between items-center border-b p-4">
               <h3 className="font-medium text-lg">{selectedNotification.message}</h3>
-              <button 
+              <button
                 onClick={closeDialog}
                 className="p-1 hover:bg-gray-200 rounded-full transition-colors"
               >
@@ -342,7 +372,7 @@ export default function DashboardPage() {
               </div>
             </div>
             <div className="border-t p-3 flex justify-end">
-              <button 
+              <button
                 onClick={closeDialog}
                 className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
               >
