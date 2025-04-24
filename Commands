@@ -1,0 +1,15 @@
+# 1. First run Terraform locally to provision infrastructure
+cd terraform/
+terraform init
+terraform apply
+
+# 2. Then generate tfvars (if needed)
+node generate-tfvars.js
+
+# 3. Run your app in Docker with the outputs
+docker build -t aws-s3-manager .
+docker run -p 3000:3000 --env-file terraform-outputs.env myapp
+
+
+1. Local/CI Terraform Execution → 2. Generate outputs → 3. Build Docker image → 4. Deploy container
+
