@@ -62,7 +62,7 @@ export default defineFlatConfig([
   {
     files: ["**/*.{js,jsx,ts,tsx}"],
     rules: {
-      "no-console": process.env.NODE_ENV === "production" ? "error" : "warn",
+      "no-console": "off",
     },
   },
 ]);

@@ -1,13 +1,14 @@
-version: '3.8'
+version: "3.9"
 
 services:
-  web:
-    build: .
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        BUILD_ENV: production  # or development
     ports:
-      - '3000:3000'
+      - "3000:3000"
     environment:
-      - NODE_ENV=development
-    volumes:
-      - .:/app
-      - /app/node_modules
-    command: npm run dev
+      - NEXT_PUBLIC_ENV=production
+    restart: unless-stopped

@@ -7,9 +7,11 @@ terraform apply
 node generate-tfvars.js
 
 # 3. Run your app in Docker with the outputs
-docker build -t aws-s3-manager .
-docker run -p 3000:3000 --env-file terraform-outputs.env myapp
+docker build -t aws-s3-uploader --build-arg BUILD_ENV=development .
+docker run -p 3000:3000 -e NEXT_PUBLIC_ENV=development --name aws-uploader-dev aws-s3-uploader
 
+docker-compose build --build-arg BUILD_ENV=development
+docker-compose up
 
 1. Local/CI Terraform Execution → 2. Generate outputs → 3. Build Docker image → 4. Deploy container
 
