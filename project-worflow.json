@@ -1,0 +1,84 @@
+{
+  "name": "AWS S3 Uploader Deployment Workflow",
+  "version": "1.0.0",
+  "description": "Workflow for deploying AWS S3 Uploader application",
+  "workflow": {
+    "steps": [
+      {
+        "name": "Provision Infrastructure",
+        "description": "Execute Terraform to provision required cloud resources",
+        "commands": ["cd terraform/", "terraform init", "terraform apply"],
+        "outputs": [
+          {
+            "name": "terraform_outputs",
+            "path": "terraform/terraform.tfstate"
+          }
+        ]
+      },
+      {
+        "name": "Generate Configuration",
+        "description": "Generate tfvars/configuration files based on infrastructure outputs",
+        "commands": ["node generate-tfvars.js"],
+        "dependencies": ["Provision Infrastructure"]
+      },
+      {
+        "name": "Build Docker Image",
+        "description": "Build the application Docker image",
+        "commands": ["docker build -t aws-s3-uploader --build-arg BUILD_ENV=development ."],
+        "dependencies": ["Generate Configuration"],
+        "artifacts": [
+          {
+            "name": "docker_image",
+            "id": "aws-s3-uploader:latest"
+          }
+        ]
+      },
+      {
+        "name": "Deploy Container",
+        "description": "Deploy the application container",
+        "options": [
+          {
+            "name": "docker-run",
+            "commands": [
+              "docker run -p 3000:3000 -e NEXT_PUBLIC_ENV=development --name aws-uploader-dev aws-s3-uploader"
+            ]
+          },
+          {
+            "name": "docker-compose",
+            "commands": [
+              "docker-compose build --build-arg BUILD_ENV=development",
+              "docker-compose up"
+            ]
+          }
+        ],
+        "dependencies": ["Build Docker Image"]
+      }
+    ]
+  },
+  "environments": [
+    {
+      "name": "development",
+      "default": true,
+      "variables": {
+        "BUILD_ENV": "development",
+        "NEXT_PUBLIC_ENV": "development"
+      }
+    },
+    {
+      "name": "production",
+      "variables": {
+        "BUILD_ENV": "production",
+        "NEXT_PUBLIC_ENV": "production"
+      }
+    }
+  ],
+  "resources": {
+    "compute": {
+      "memory": "2GB",
+      "cpu": "1 vCPU"
+    },
+    "networking": {
+      "ports": ["3000:3000"]
+    }
+  }
+}
