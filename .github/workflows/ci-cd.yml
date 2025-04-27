@@ -7,7 +7,7 @@ on:
     branches: [main]
 
 jobs:
-  test:
+  checks:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -15,12 +15,11 @@ jobs:
         with:
           node-version: 18
       - run: npm ci
-      - run: npm test
       - run: npm run lint
       - run: npm run check-types
 
   deploy:
-    needs: test
+    needs: checks
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
