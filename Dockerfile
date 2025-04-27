@@ -4,21 +4,16 @@ WORKDIR /app
 
 # ------------------- Dependencies -------------------
 FROM base AS deps
-# Copy package files first for better caching
 COPY package.json package-lock.json* ./
-# Install all dependencies including devDependencies
 RUN npm ci
 
 # ------------------- Builder -------------------
 FROM base AS builder
-# Set build-time environment variables
 ARG BUILD_ENV=production
 ENV NEXT_PUBLIC_ENV=$BUILD_ENV
 ENV NODE_ENV=production
 
-# Copy dependencies from previous stage
 COPY --from=deps /app/node_modules ./node_modules
-# Copy all source files
 COPY . .
 
 # Select appropriate env file based on build environment
@@ -32,7 +27,6 @@ RUN if [ "$BUILD_ENV" = "production" ]; then \
 
 # ------------------- Production Image -------------------
 FROM base AS production
-# Create non-root user
 RUN addgroup --system --gid 1001 nodejs && \
   adduser --system --uid 1001 nextjs
 
@@ -57,15 +51,11 @@ CMD ["node", "server.js"]
 FROM base AS dev
 ENV NODE_ENV=development
 
-# Copy package files
 COPY package.json package-lock.json* ./
-# Install dev dependencies
 RUN npm ci
 
-# Copy all files
 COPY . .
 
-# Expose ports
 EXPOSE 3000
 
 # Start development server
