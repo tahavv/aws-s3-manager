@@ -17,10 +17,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - [Bugfix] Fixed issue where files larger than 5MB failed to upload.
 - [Bugfix] Corrected notification panel UI overflow.
 
-### Changed
-
-- [Change] Upgraded Terraform scripts to include lifecycle rules for S3 objects.
-
 ---
 
 ## [1.0.0] - 2024-04-20
