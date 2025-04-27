@@ -33,13 +33,7 @@ jobs:
     - name: Build Docker image (Production)
       run: |
         docker build --target production -t aws-s3-manager .
-        docker run -p 3001:3000 aws-s3-manager
-
-    - name: Build Docker image (Development)
-      run: |
-        docker build --target dev -t aws-s3-manager:dev .
-        docker run -d -p 3000:3000 -v $(pwd):/app aws-s3-manager:dev
-
+        
     - name: Push Docker image to Docker Hub
       run: |
         docker push aws-s3-manager:latest
