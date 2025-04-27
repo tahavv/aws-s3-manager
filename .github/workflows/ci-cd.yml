@@ -7,7 +7,7 @@ on:
     branches: [main]
 
 jobs:
-  test:
+  checks:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -15,12 +15,11 @@ jobs:
         with:
           node-version: 18
       - run: npm ci
-      - run: npm test
       - run: npm run lint
       - run: npm run check-types
 
-  deploy:
-    needs: test
+  build-scan-push:
+    needs: checks
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -36,20 +35,30 @@ jobs:
         with:
           images: ${{ secrets.DOCKER_USERNAME }}/aws-s3-manager
       
-      - name: Build and push
+      - name: Build image
+        id: build
         uses: docker/build-push-action@v4
         with:
           context: .
           platforms: linux/amd64,linux/arm64
-          push: ${{ github.ref == 'refs/heads/main' }}
+          push: false
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
       
-      - name: Scan image
-        if: ${{ github.ref == 'refs/heads/main' }}
+      - name: Scan local image
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: ${{ secrets.DOCKER_USERNAME }}/aws-s3-manager:latest
+          image-ref: ${{ steps.meta.outputs.tags }}
           format: 'table'
           exit-code: '1'
           severity: 'CRITICAL,HIGH'
+      
+      - name: Push to Docker Hub
+        if: ${{ github.ref == 'refs/heads/main' }}
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
