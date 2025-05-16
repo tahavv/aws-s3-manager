@@ -9,7 +9,6 @@ try {
   validateEnv();
 } catch (error: any) {
   console.error('Environment validation failed:', error.message);
-  // You might want to show an error page in production
 }
 
 const geistSans = Geist({
