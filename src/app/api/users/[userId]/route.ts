@@ -19,12 +19,14 @@ const pool = new Pool({
   port: parseInt(process.env.DB_PORT || '5432'),
 });
 
-export async function DELETE(request: NextRequest, { params }: { params: { userId: string } }) {
+export async function DELETE(
+  request: Request,
+  { params }: { params: Promise<{ userId: string }> }
+) {
   try {
+    const { userId } = await params;
     // Get user's photo URL before deletion
-    const userResult = await pool.query('SELECT photo_url FROM users WHERE id = $1', [
-      params.userId,
-    ]);
+    const userResult = await pool.query('SELECT photo_url FROM users WHERE id = $1', [userId]);
 
     if (userResult.rows.length === 0) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
@@ -37,7 +39,7 @@ export async function DELETE(request: NextRequest, { params }: { params: { userI
     await deleteFile(process.env.NEXT_PUBLIC_S3_BUCKET_NAME!, photoKey);
 
     // Delete user from database
-    await pool.query('DELETE FROM users WHERE id = $1', [params.userId]);
+    await pool.query('DELETE FROM users WHERE id = $1', [userId]);
 
     return NextResponse.json({ message: 'User deleted successfully' }, { status: 200 });
   } catch (error) {
