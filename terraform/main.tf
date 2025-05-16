@@ -136,3 +136,48 @@ resource "aws_s3_bucket_notification" "bucket_notification" {
     aws_sns_topic_policy.sns_topic_policy
   ]
 }
+
+# RDS PostgreSQL Instance
+resource "aws_db_instance" "user_db" {
+  allocated_storage          = 20
+  engine                     = "postgres"
+  engine_version             = "15.4"
+  instance_class             = "db.t3.micro"
+  db_name                    = var.db_name
+  username                   = var.db_user
+  password                   = var.db_password
+  parameter_group_name       = "default.postgres15"
+  skip_final_snapshot        = true
+  publicly_accessible        = false
+  vpc_security_group_ids     = [aws_security_group.rds_sg.id]
+  backup_retention_period    = 7
+  storage_encrypted          = true
+  multi_az                   = false
+  auto_minor_version_upgrade = true
+  apply_immediately          = true
+  tags = {
+    Name        = "user-db-instance"
+    Environment = var.environment
+  }
+}
+
+# Security Group for RDS
+resource "aws_security_group" "rds_sg" {
+  name        = "rds-sg"
+  description = "Allow inbound PostgreSQL access"
+  vpc_id      = var.vpc_id
+
+  ingress {
+    from_port   = 5432
+    to_port     = 5432
+    protocol    = "tcp"
+    cidr_blocks = [var.allowed_cidr]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}

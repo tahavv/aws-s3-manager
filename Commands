@@ -1,3 +1,6 @@
+# 0 . migrate Db
+node src/utils/dbMigrate.ts
+
 # Steps
 1. Local/CI Terraform Execution → 2. Generate outputs → 3. Build Docker image → 4. Deploy container
 

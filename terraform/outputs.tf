@@ -17,3 +17,15 @@ output "sqs_queue_url" {
 output "sqs_queue_arn" {
   value = aws_sqs_queue.sqs_queue.arn
 }
+
+output "rds_endpoint" {
+  value = aws_db_instance.user_db.endpoint
+}
+
+output "rds_db_name" {
+  value = aws_db_instance.user_db.db_name
+}
+
+output "rds_username" {
+  value = aws_db_instance.user_db.username
+}

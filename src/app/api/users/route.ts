@@ -2,6 +2,16 @@ import { NextRequest, NextResponse } from 'next/server';
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import { Pool } from 'pg';
 import { validateEnv, validateFileUpload } from '@/utils/validateEnv';
+import { migrateUsersTable } from '@/utils/dbMigrate';
+
+// Run migration on cold start
+let migrationPromise: Promise<void> | null = null;
+async function ensureMigration() {
+  if (!migrationPromise) {
+    migrationPromise = migrateUsersTable();
+  }
+  await migrationPromise;
+}
 
 // Initialize environment validation
 try {
@@ -30,6 +40,7 @@ const s3Client = new S3Client({
 });
 
 export async function POST(request: NextRequest) {
+  await ensureMigration();
   try {
     const formData = await request.formData();
     const name = formData.get('name') as string;
@@ -77,6 +88,7 @@ export async function POST(request: NextRequest) {
 }
 
 export async function GET() {
+  await ensureMigration();
   try {
     const result = await pool.query(
       'SELECT id, name, email, photo_url as "photoUrl", created_at as "createdAt" FROM users ORDER BY created_at DESC'
