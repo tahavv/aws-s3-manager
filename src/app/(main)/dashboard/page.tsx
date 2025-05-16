@@ -146,14 +146,19 @@ export default function DashboardPage() {
     pollNotifications();
   };
 
-  const handleUploadSuccess = () => {
-    fetchFiles();
-    pollNotifications();
+  // Handler for file deletion success
+  const handleDeleteSuccess = (fileKey: string) => {
+    setFiles((prev) => prev.filter((file) => file.Key !== fileKey));
+    // Optionally, refresh stats or show notification
+    setStats((prev) => ({
+      ...prev,
+      totalFiles: prev.totalFiles - 1,
+    }));
   };
 
-  const handleDeleteSuccess = () => {
+  // Handler for upload success
+  const handleUploadSuccess = () => {
     fetchFiles();
-    pollNotifications();
   };
 
   const formatBytes = (bytes: number) => {
@@ -212,178 +217,49 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center">
-              <CloudLightning className="h-8 w-8 text-blue-500" />
-              <h1 className="ml-2 text-xl font-bold text-gray-900">AWS S3 Manager</h1>
-            </div>
-
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={handleRefresh}
-                className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors flex items-center"
-                disabled={refreshing}
-              >
-                <RefreshCw size={20} className={refreshing ? 'animate-spin' : ''} />
-              </button>
-
-              <button className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors">
-                <Settings size={20} />
-              </button>
-
-              <div className="w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center">
-                <User size={16} />
-              </div>
-            </div>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-white p-6">
+      <div className="max-w-6xl mx-auto mt-10 grid grid-cols-1 md:grid-cols-3 gap-8">
+        {/* Stats Card */}
+        <div className="col-span-1 bg-white rounded-xl shadow-lg p-6 flex flex-col items-center">
+          <PieChart className="text-blue-500 mb-2" size={36} />
+          <h2 className="text-xl font-bold text-blue-700 mb-2">File Stats</h2>
+          <div className="text-gray-700 mb-1">
+            Total Files: <span className="font-semibold">{stats.totalFiles}</span>
           </div>
-        </div>
-      </header>
-
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex justify-between items-center mb-6">
+          <div className="text-gray-700 mb-1">
+            Total Size:{' '}
+            <span className="font-semibold">{(stats.totalSize / 1024).toFixed(2)} KB</span>
+          </div>
           <div className="text-gray-700">
-            <h2 className="text-lg font-bold">Bucket Statistics</h2>
-          </div>
-          <div className="flex items-center">
-            <label htmlFor="useMockData" className="text-gray-600 mr-2">
-              Use Mock Data
-            </label>
-            <input
-              id="useMockData"
-              type="checkbox"
-              checked={useMockData}
-              onChange={() => setUseMockData(!useMockData)}
-              className="h-5 w-5 text-blue-500 focus:ring-blue-400 border-gray-300 rounded"
-            />
+            Last Upload: <span className="font-semibold">{stats.lastUpload || 'N/A'}</span>
           </div>
         </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-500">Total Files</p>
-                <h3 className="text-3xl font-bold text-gray-900 mt-1">{stats.totalFiles}</h3>
-              </div>
-              <div className="p-3 bg-blue-100 rounded-full">
-                <Database className="h-6 w-6 text-blue-600" />
-              </div>
-            </div>
+        {/* File List & Upload */}
+        <div className="col-span-1 md:col-span-2 bg-white rounded-xl shadow-lg p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-bold text-blue-700">Files</h2>
+            <button
+              onClick={fetchFiles}
+              className="flex items-center gap-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg px-4 py-2 transition disabled:opacity-50"
+              disabled={refreshing}
+            >
+              <RefreshCw className={refreshing ? 'animate-spin' : ''} size={18} />
+              Refresh
+            </button>
           </div>
-
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-500">Total Storage</p>
-                <h3 className="text-3xl font-bold text-gray-900 mt-1">
-                  {formatBytes(stats.totalSize)}
-                </h3>
-              </div>
-              <div className="p-3 bg-green-100 rounded-full">
-                <PieChart className="h-6 w-6 text-green-600" />
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-500">Bucket Name</p>
-                <h3 className="text-xl font-bold text-gray-900 mt-1 truncate max-w-xs">
-                  {bucketName}
-                </h3>
-              </div>
-              <a
-                href={`https://s3.console.aws.amazon.com/s3/buckets/${bucketName}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="p-3 bg-gray-100 rounded-full hover:bg-gray-200 transition-colors"
-              >
-                <ExternalLink className="h-6 w-6 text-gray-600" />
-              </a>
-            </div>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2">
+          <ListFiles files={files} onDeleteSuccess={handleDeleteSuccess} />
+          <div className="mt-6">
             <ModernUpload onUploadSuccess={handleUploadSuccess} />
-            <ListFiles files={files} onDeleteSuccess={handleDeleteSuccess} />
-          </div>
-
-          <div className="lg:col-span-1">
-            <div className="bg-white rounded-lg shadow-md p-6 mb-8 sticky top-8">
-              <h2 className="text-xl font-bold mb-4 text-gray-800">Recent Activity</h2>
-              <div className="max-h-96 overflow-y-auto">
-                {notifications.length > 0 ? (
-                  notifications.slice(0, 10).map((notification, index) => (
-                    <div key={index} className="mb-3 border-l-4 border-blue-500 pl-3 py-1 group">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <p className="text-sm text-gray-700">{notification.message}</p>
-                          <p className="text-xs text-gray-500 mt-1">
-                            {new Date(notification.timestamp).toLocaleTimeString()}
-                          </p>
-                        </div>
-                        {notification.rawData && (
-                          <button
-                            onClick={() => viewNotificationDetails(notification)}
-                            className="text-blue-500 hover:text-blue-700 text-xs px-2 py-1 rounded hover:bg-blue-100 transition-colors opacity-0 group-hover:opacity-100"
-                          >
-                            View
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <div className="text-center text-gray-500 py-8">
-                    <p>No recent activity</p>
-                  </div>
-                )}
-              </div>
-            </div>
           </div>
         </div>
-      </main>
-
-      {/* Popup Dialog for Activity Details */}
-      {showDialog && selectedNotification && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-          <div className="bg-white rounded-lg shadow-lg w-full max-w-xl max-h-screen overflow-hidden">
-            <div className="flex justify-between items-center border-b p-4">
-              <h3 className="font-medium text-lg">{selectedNotification.message}</h3>
-              <button
-                onClick={closeDialog}
-                className="p-1 hover:bg-gray-200 rounded-full transition-colors"
-              >
-                <X size={20} className="text-gray-500" />
-              </button>
-            </div>
-            <div className="p-4 overflow-auto max-h-96">
-              <h4 className="text-sm font-medium text-gray-700 mb-2">Notification Details</h4>
-              <div className="bg-gray-100 rounded-md p-4 overflow-auto">
-                <pre className="text-xs text-gray-800 whitespace-pre-wrap">
-                  {selectedNotification.rawData && formatJsonData(selectedNotification.rawData)}
-                </pre>
-              </div>
-            </div>
-            <div className="border-t p-3 flex justify-end">
-              <button
-                onClick={closeDialog}
-                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
-              >
-                Close
-              </button>
-            </div>
-          </div>
+        {/* Notifications */}
+        <div className="col-span-1 md:col-span-3 bg-white rounded-xl shadow-lg p-6 mt-8">
+          <h2 className="text-xl font-bold text-blue-700 mb-4 flex items-center gap-2">
+            <CloudLightning className="text-blue-400" /> Notifications
+          </h2>
+          <NotificationsList notifications={notifications} />
         </div>
-      )}
-
-      <NotificationsList notifications={notifications} />
+      </div>
     </div>
   );
 }

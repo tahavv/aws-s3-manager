@@ -103,7 +103,7 @@ export default function UserManagementPage() {
     }
   };
 
-  const handleDeleteUser = async (userId: string) => {
+  const handleDelete = async (userId: string) => {
     if (!confirm('Are you sure you want to delete this user?')) return;
 
     try {
@@ -119,148 +119,129 @@ export default function UserManagementPage() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* User Creation Form */}
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <div className="flex items-center gap-2 mb-6">
-            <UserPlus className="w-6 h-6 text-blue-600" />
-            <h2 className="text-2xl font-bold">Create New User</h2>
-          </div>
-
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
-              <input
-                type="text"
-                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="John Doe"
-                required
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
-              <input
-                type="email"
-                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="john@example.com"
-                required
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Profile Photo</label>
-              <div className="flex items-center space-x-4">
-                <div className="flex-1">
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handlePhotoChange}
-                    className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-                    required
-                  />
-                </div>
-                {photoPreview && (
-                  <img
-                    src={photoPreview}
-                    alt="Preview"
-                    className="w-16 h-16 object-cover rounded-full border-2 border-blue-500"
-                  />
-                )}
-              </div>
-            </div>
-
-            {error && (
-              <div className="flex items-center gap-2 text-red-600 bg-red-50 p-3 rounded-md">
-                <AlertCircle className="w-5 h-5" />
-                <p className="text-sm">{error}</p>
-              </div>
-            )}
-
-            {success && (
-              <div className="flex items-center gap-2 text-green-600 bg-green-50 p-3 rounded-md">
-                <AlertCircle className="w-5 h-5" />
-                <p className="text-sm">{success}</p>
-              </div>
-            )}
-
-            <button
-              type="submit"
-              className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-              disabled={loading}
-            >
-              {loading ? (
-                <>
-                  <span className="animate-spin">⌛</span>
-                  Creating...
-                </>
-              ) : (
-                'Create User'
-              )}
-            </button>
-          </form>
+    <div className="max-w-3xl mx-auto mt-10 bg-white rounded-xl shadow-lg p-8">
+      <h2 className="text-3xl font-bold text-blue-700 mb-6 flex items-center gap-2">
+        <UserPlus className="inline-block text-blue-500" size={32} /> User Management
+      </h2>
+      <form
+        onSubmit={handleSubmit}
+        className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8 items-end"
+      >
+        <div>
+          <label className="block text-gray-700 font-medium mb-1">Name</label>
+          <input
+            type="text"
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-200"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Enter name"
+            required
+          />
         </div>
-
-        {/* Users Table */}
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <h2 className="text-2xl font-bold mb-6">Users List</h2>
-
-          {loadingUsers ? (
-            <div className="text-center py-4">Loading users...</div>
-          ) : users.length === 0 ? (
-            <div className="text-center py-4 text-gray-500">No users found</div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Photo
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Name
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Email
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {users.map((user) => (
-                    <tr key={user.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <img
-                          src={user.photoUrl}
-                          alt={user.name}
-                          className="w-10 h-10 rounded-full object-cover"
-                        />
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">{user.name}</td>
-                      <td className="px-6 py-4 whitespace-nowrap">{user.email}</td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <button
-                          onClick={() => handleDeleteUser(user.id)}
-                          className="text-red-600 hover:text-red-900 focus:outline-none"
-                          title="Delete user"
-                        >
-                          <Trash2 className="w-5 h-5" />
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
+        <div>
+          <label className="block text-gray-700 font-medium mb-1">Email</label>
+          <input
+            type="email"
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-200"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="Enter email"
+            required
+          />
         </div>
+        <div>
+          <label className="block text-gray-700 font-medium mb-1">Profile Photo</label>
+          <input
+            type="file"
+            accept="image/*"
+            className="w-full border border-gray-300 rounded-lg px-3 py-2"
+            onChange={handlePhotoChange}
+            required
+          />
+        </div>
+        <button
+          type="submit"
+          className="md:col-span-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg px-6 py-2 mt-2 transition disabled:opacity-50"
+          disabled={loading}
+        >
+          {loading ? 'Adding...' : 'Add User'}
+        </button>
+      </form>
+      {photoPreview && (
+        <div className="mb-6 flex justify-center">
+          <img
+            src={photoPreview}
+            alt="Profile Preview"
+            className="h-24 w-24 rounded-full object-cover border-2 border-blue-200 shadow"
+          />
+        </div>
+      )}
+      {error && (
+        <div className="flex items-center gap-2 bg-red-50 border border-red-200 text-red-700 rounded-lg px-4 py-2 mb-4">
+          <AlertCircle />
+          <span>{error}</span>
+        </div>
+      )}
+      {success && (
+        <div className="flex items-center gap-2 bg-green-50 border border-green-200 text-green-700 rounded-lg px-4 py-2 mb-4">
+          <UserPlus />
+          <span>{success}</span>
+        </div>
+      )}
+      <h3 className="text-xl font-semibold text-gray-800 mt-8 mb-4">All Users</h3>
+      <div className="overflow-x-auto">
+        <table className="min-w-full bg-white border border-gray-200 rounded-lg">
+          <thead>
+            <tr className="bg-blue-50">
+              <th className="py-2 px-4 text-left font-medium text-gray-700">Photo</th>
+              <th className="py-2 px-4 text-left font-medium text-gray-700">Name</th>
+              <th className="py-2 px-4 text-left font-medium text-gray-700">Email</th>
+              <th className="py-2 px-4 text-left font-medium text-gray-700">Created</th>
+              <th className="py-2 px-4 text-center font-medium text-gray-700">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {loadingUsers ? (
+              <tr>
+                <td colSpan={5} className="text-center py-6 text-gray-400">
+                  Loading users...
+                </td>
+              </tr>
+            ) : users.length === 0 ? (
+              <tr>
+                <td colSpan={5} className="text-center py-6 text-gray-400">
+                  No users found.
+                </td>
+              </tr>
+            ) : (
+              users.map((user) => (
+                <tr key={user.id} className="border-t border-gray-100 hover:bg-blue-50 transition">
+                  <td className="py-2 px-4">
+                    <img
+                      src={user.photoUrl}
+                      alt={user.name}
+                      className="h-12 w-12 rounded-full object-cover border border-gray-200 shadow"
+                    />
+                  </td>
+                  <td className="py-2 px-4 font-medium text-gray-800">{user.name}</td>
+                  <td className="py-2 px-4 text-gray-600">{user.email}</td>
+                  <td className="py-2 px-4 text-gray-500 text-sm">
+                    {new Date(user.createdAt).toLocaleString()}
+                  </td>
+                  <td className="py-2 px-4 text-center">
+                    <button
+                      onClick={() => handleDelete(user.id)}
+                      className="text-red-500 hover:text-red-700 p-2 rounded-full transition"
+                      title="Delete user"
+                    >
+                      <Trash2 />
+                    </button>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
       </div>
     </div>
   );
