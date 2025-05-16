@@ -139,13 +139,107 @@ The Terraform configuration is located in the `terraform/` directory and include
 ## Prerequisites
 
 1. **AWS Account**: Ensure you have an active AWS account with permissions for S3, SQS, and SNS.
-2. **Environment Variables**: Configure the following environment variables in a `.env` file:
-   - `AWS_ACCESS_KEY_ID`: Your AWS access key.
-   - `AWS_SECRET_ACCESS_KEY`: Your AWS secret key.
-   - `AWS_REGION`: AWS region (e.g., `us-east-1`).
-   - `NEXT_PUBLIC_S3_BUCKET_NAME`: Name of the S3 bucket.
-   - `NEXT_PUBLIC_SQS_QUEUE_URL`: URL of the SQS queue.
-   - `NEXT_PUBLIC_SNS_TOPIC_ARN`: ARN of the SNS topic.
+2. **PostgreSQL Database**: An RDS instance running PostgreSQL (created via Terraform).
+3. **Environment Variables**: Configure the following environment variables in a `.env` file:
+
+```env
+# AWS Credentials
+AWS_ACCESS_KEY_ID=your_access_key_here
+AWS_SECRET_ACCESS_KEY=your_secret_key_here
+AWS_REGION=us-east-1
+
+# S3 Configuration
+NEXT_PUBLIC_S3_BUCKET_NAME=your-bucket-name
+NEXT_PUBLIC_SQS_QUEUE_URL=https://sqs.us-east-1.amazonaws.com/your-account-id/your-queue-name
+NEXT_PUBLIC_SNS_TOPIC_ARN=arn:aws:sns:us-east-1:your-account-id:your-topic-name
+
+# PostgreSQL Database Configuration
+DB_USER=postgres
+DB_PASSWORD=your_db_password_here
+DB_HOST=your-rds-endpoint.region.rds.amazonaws.com
+DB_NAME=users_db
+DB_PORT=5432
+```
+
+> **Note**: Replace the placeholder values with your actual AWS and RDS credentials.
+
+---
+
+## Environment Configuration
+
+This project uses different environment configurations for different stages of development:
+
+### Development (.env.development)
+
+- Used for development environment
+- Connects to local PostgreSQL database
+- Uses development AWS resources
+- Enables debug mode and mock data
+
+### Local (.env.local)
+
+- Used for local development
+- Override any environment-specific variables
+- Not committed to version control
+- Enables hot reload and watch mode
+
+### Production (.env.production)
+
+- Used for production deployment
+- Connects to RDS instance
+- Uses production AWS resources
+- Enables security features and performance optimizations
+
+To set up your environment:
+
+1. Copy the appropriate .env file:
+
+   ```bash
+   # For development
+   cp .env.development .env.local
+
+   # For production
+   cp .env.production .env.local
+   ```
+
+2. Update the values in your `.env.local` with your actual credentials:
+
+   - AWS credentials and region
+   - Database connection details
+   - S3 bucket names
+   - SNS topic ARNs
+   - SQS queue URLs
+
+3. Make sure to never commit `.env.local` to version control
+
+### Environment Variables Reference
+
+#### AWS Configuration
+
+- `AWS_ACCESS_KEY_ID`: Your AWS access key
+- `AWS_SECRET_ACCESS_KEY`: Your AWS secret key
+- `AWS_REGION`: AWS region (e.g., us-east-1)
+- `NEXT_PUBLIC_S3_BUCKET_NAME`: S3 bucket for file storage
+- `NEXT_PUBLIC_SNS_TOPIC_ARN`: SNS topic ARN for notifications
+- `NEXT_PUBLIC_SQS_QUEUE_URL`: SQS queue URL for message processing
+
+#### Database Configuration
+
+- `DB_USER`: PostgreSQL username
+- `DB_PASSWORD`: PostgreSQL password
+- `DB_HOST`: Database host (localhost or RDS endpoint)
+- `DB_NAME`: Database name
+- `DB_PORT`: Database port (default: 5432)
+
+#### Application Settings
+
+- `NEXT_PUBLIC_API_URL`: API base URL
+- `NEXT_PUBLIC_ENV`: Environment name (development/production)
+- `DEBUG_MODE`: Enable debug logging
+- `LOG_LEVEL`: Logging level
+- `ENABLE_MOCK_DATA`: Toggle mock data mode
+- `MAX_FILE_SIZE`: Maximum file upload size
+- `ALLOWED_FILE_TYPES`: Allowed file upload types
 
 ---
 

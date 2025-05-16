@@ -1,5 +1,6 @@
-import { useState, useRef } from "react";
-import { Upload, X, CheckCircle, AlertCircle } from "lucide-react";
+import { useState, useRef } from 'react';
+import { Upload, X, CheckCircle, AlertCircle } from 'lucide-react';
+import { validateFileUpload } from '@/utils/validateEnv';
 
 interface ModernUploadProps {
   onUploadSuccess: () => void;
@@ -9,15 +10,23 @@ export default function ModernUpload({ onUploadSuccess }: ModernUploadProps) {
   const [file, setFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
-  const [status, setStatus] = useState({ type: "", message: "" });
+  const [status, setStatus] = useState({ type: '', message: '' });
+  const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const bucketName = process.env.NEXT_PUBLIC_S3_BUCKET_NAME || "default-bucket";
+  const bucketName = process.env.NEXT_PUBLIC_S3_BUCKET_NAME || 'default-bucket';
 
-  const handleFileChange = (e: any) => {
-    if (e.target.files?.[0]) {
-      setFile(e.target.files[0]);
-      setStatus({ type: "", message: "" });
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const validationError = validateFileUpload(file);
+      if (validationError) {
+        setError(validationError);
+        return;
+      }
+      setFile(file);
+      setError(null);
+      setStatus({ type: '', message: '' });
     }
   };
 
@@ -35,15 +44,22 @@ export default function ModernUpload({ onUploadSuccess }: ModernUploadProps) {
     setIsDragging(false);
 
     if (e.dataTransfer.files?.[0]) {
-      setFile(e.dataTransfer.files[0]);
-      setStatus({ type: "", message: "" });
+      const droppedFile = e.dataTransfer.files[0];
+      const validationError = validateFileUpload(droppedFile);
+      if (validationError) {
+        setError(validationError);
+        return;
+      }
+      setFile(droppedFile);
+      setError(null);
+      setStatus({ type: '', message: '' });
     }
   };
 
   const clearFile = () => {
     setFile(null);
     if (fileInputRef.current) {
-      fileInputRef.current.value = "";
+      fileInputRef.current.value = '';
     }
   };
 
@@ -52,7 +68,7 @@ export default function ModernUpload({ onUploadSuccess }: ModernUploadProps) {
 
     try {
       setIsUploading(true);
-      setStatus({ type: "", message: "" });
+      setStatus({ type: '', message: '' });
 
       // Convert the file to a Base64 string
       const arrayBuffer = await new Promise((resolve, reject) => {
@@ -63,14 +79,16 @@ export default function ModernUpload({ onUploadSuccess }: ModernUploadProps) {
       });
 
       const base64File = btoa(
-        new Uint8Array(arrayBuffer as ArrayBuffer)
-          .reduce((data, byte) => data + String.fromCharCode(byte), "")
+        new Uint8Array(arrayBuffer as ArrayBuffer).reduce(
+          (data, byte) => data + String.fromCharCode(byte),
+          ''
+        )
       );
 
-      const response = await fetch("/api/upload", {
-        method: "POST",
+      const response = await fetch('/api/upload', {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           bucket: bucketName,
@@ -82,14 +100,14 @@ export default function ModernUpload({ onUploadSuccess }: ModernUploadProps) {
       const result = await response.json();
 
       if (response.ok) {
-        setStatus({ type: "success", message: "File uploaded successfully!" });
+        setStatus({ type: 'success', message: 'File uploaded successfully!' });
         setFile(null);
         onUploadSuccess();
       } else {
-        setStatus({ type: "error", message: result.message || "Upload failed" });
+        setStatus({ type: 'error', message: result.message || 'Upload failed' });
       }
     } catch (error) {
-      setStatus({ type: "error", message: "Upload failed. Please try again." });
+      setStatus({ type: 'error', message: 'Upload failed. Please try again.' });
     } finally {
       setIsUploading(false);
     }
@@ -105,10 +123,10 @@ export default function ModernUpload({ onUploadSuccess }: ModernUploadProps) {
       <div
         className={`border-2 border-dashed rounded-lg p-8 mb-4 transition-colors duration-300 ${
           isDragging
-            ? "border-blue-500 bg-blue-50"
+            ? 'border-blue-500 bg-blue-50'
             : file
-            ? "border-green-400 bg-green-50"
-            : "border-gray-300 hover:border-blue-400"
+              ? 'border-green-400 bg-green-50'
+              : 'border-gray-300 hover:border-blue-400'
         }`}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
@@ -122,7 +140,7 @@ export default function ModernUpload({ onUploadSuccess }: ModernUploadProps) {
                 <Upload className="text-blue-500" size={24} />
               </div>
               <p className="text-gray-600 mb-2">
-                {isDragging ? "Drop your file here" : "Drag & drop your file here"}
+                {isDragging ? 'Drop your file here' : 'Drag & drop your file here'}
               </p>
               <p className="text-gray-400 text-sm">or click to browse</p>
             </>
@@ -134,9 +152,7 @@ export default function ModernUpload({ onUploadSuccess }: ModernUploadProps) {
                 </div>
                 <div className="text-left">
                   <p className="font-medium text-gray-800 truncate max-w-xs">{file.name}</p>
-                  <p className="text-sm text-gray-500">
-                    {(file.size / 1024).toFixed(2)} KB
-                  </p>
+                  <p className="text-sm text-gray-500">{(file.size / 1024).toFixed(2)} KB</p>
                 </div>
               </div>
               <button
@@ -151,13 +167,10 @@ export default function ModernUpload({ onUploadSuccess }: ModernUploadProps) {
             </div>
           )}
         </div>
-        <input
-          ref={fileInputRef}
-          type="file"
-          onChange={handleFileChange}
-          className="hidden"
-        />
+        <input ref={fileInputRef} type="file" onChange={handleFileChange} className="hidden" />
       </div>
+
+      {error && <div className="text-red-500 text-sm mb-4">{error}</div>}
 
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
         <button
@@ -165,8 +178,8 @@ export default function ModernUpload({ onUploadSuccess }: ModernUploadProps) {
           disabled={!file || isUploading}
           className={`w-full sm:w-auto px-6 py-3 rounded-lg font-medium flex items-center justify-center transition-all duration-300 ${
             !file
-              ? "bg-gray-200 text-gray-500 cursor-not-allowed"
-              : "bg-blue-500 hover:bg-blue-600 text-white shadow-md hover:shadow-lg"
+              ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
+              : 'bg-blue-500 hover:bg-blue-600 text-white shadow-md hover:shadow-lg'
           }`}
         >
           {isUploading ? (
@@ -194,17 +207,17 @@ export default function ModernUpload({ onUploadSuccess }: ModernUploadProps) {
               Uploading...
             </>
           ) : (
-            "Upload File"
+            'Upload File'
           )}
         </button>
 
         {status.message && (
           <div
             className={`flex items-center ${
-              status.type === "error" ? "text-red-500" : "text-green-500"
+              status.type === 'error' ? 'text-red-500' : 'text-green-500'
             }`}
           >
-            {status.type === "error" ? (
+            {status.type === 'error' ? (
               <AlertCircle size={16} className="mr-1" />
             ) : (
               <CheckCircle size={16} className="mr-1" />
