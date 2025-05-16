@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import { Pool } from 'pg';
 import { validateEnv, validateFileUpload } from '@/utils/validateEnv';
+import { uploadFile } from '@/lib/aws/upload';
 
 // Initialize environment validation
 try {
@@ -46,22 +47,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: fileValidationError }, { status: 400 });
     }
 
-    // Upload photo to S3
+    // Upload photo to S3 using shared logic
     const photoBuffer = Buffer.from(await photo.arrayBuffer());
     const photoKey = `profile-photos/${Date.now()}-${photo.name}`;
+    await uploadFile(process.env.NEXT_PUBLIC_S3_BUCKET_NAME!, photoKey, photoBuffer);
 
-    await s3Client.send(
-      new PutObjectCommand({
-        Bucket: process.env.NEXT_PUBLIC_S3_BUCKET_NAME,
-        Key: photoKey,
-        Body: photoBuffer,
-        ContentType: photo.type,
-      })
-    );
-
-    const photoUrl = `https://${process.env.NEXT_PUBLIC_S3_BUCKET_NAME}.s3.${
-      process.env.AWS_REGION
-    }.amazonaws.com/${photoKey}`;
+    const photoUrl = `https://${process.env.NEXT_PUBLIC_S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${photoKey}`;
 
     // Insert user into database
     const result = await pool.query(
