@@ -19,7 +19,8 @@ const pool = new Pool({
   port: parseInt(process.env.DB_PORT || '5432'),
 });
 
-export async function DELETE(request: NextRequest, { params }: { params: { userId: string } }) {
+export async function DELETE(request: NextRequest, context: { params: { userId: string } }) {
+  const { params } = context;
   try {
     // Get user's photo URL before deletion
     const userResult = await pool.query('SELECT photo_url FROM users WHERE id = $1', [
