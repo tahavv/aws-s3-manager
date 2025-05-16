@@ -6,7 +6,7 @@ import { test, expect } from '@playwright/test';
 
 test.describe('User Registration Flow', () => {
   test('should register a new user and show in the user list', async ({ page }) => {
-    await page.goto('http://localhost:3000/(main)/user-management');
+    await page.goto('http://localhost:3000/user-management');
 
     // Fill in the form
     await page.fill('input[name="name"]', 'Test User');
