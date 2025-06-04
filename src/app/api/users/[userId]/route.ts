@@ -19,11 +19,18 @@ const pool = new Pool({
   port: parseInt(process.env.DB_PORT || '5432'),
 });
 
-export async function DELETE(request: Request, { params }: { params: Promise<{ user: string }> }) {
+export async function DELETE(
+  request: Request,
+  { params }: { params: Promise<{ userId: string }> }
+) {
   try {
-    const userId = await params;
+    const { userId } = await params;
+    const userIdInt = parseInt(userId, 10);
+    if (isNaN(userIdInt)) {
+      return NextResponse.json({ error: 'Invalid user ID' }, { status: 400 });
+    }
     // Get user's photo URL before deletion
-    const userResult = await pool.query('SELECT photo_url FROM users WHERE id = $1', [userId]);
+    const userResult = await pool.query('SELECT photo_url FROM users WHERE id = $1', [userIdInt]);
 
     if (userResult.rows.length === 0) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
@@ -33,10 +40,10 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ u
     const photoKey = photoUrl.split('.amazonaws.com/')[1];
 
     // Delete photo from S3 using shared logic
-    await deleteFile(process.env.NEXT_PUBLIC_S3_BUCKET_NAME!, photoKey);
+    //await deleteFile(process.env.NEXT_PUBLIC_S3_BUCKET_NAME!, photoKey);
 
     // Delete user from database
-    await pool.query('DELETE FROM users WHERE id = $1', [userId]);
+    await pool.query('DELETE FROM users WHERE id = $1', [userIdInt]);
 
     return NextResponse.json({ message: 'User deleted successfully' }, { status: 200 });
   } catch (error) {

@@ -373,3 +373,57 @@ Below are some screenshots of the application in action:
 - When contributing new features, include relevant screenshots in the `screenshots/` directory.
 - Use clear, high-quality images in `.png` format.
 - Update the **Screenshots** section in the `README.md` file to include your new screenshots.
+
+---
+
+## Running with Docker Compose
+
+This project provides Docker Compose files to easily run the application and the PostgreSQL database in both development and production environments.
+
+### 1. **Production**
+
+To run the application in production mode:
+
+```bash
+docker compose up --build
+```
+
+- This will start both the app and the database using `.env.production` settings.
+- The app will be available on `http://localhost:3000`.
+
+### 2. **Development**
+
+To run the application in development mode:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
+```
+
+- This will start both the app and the database using `.env.local` settings.
+- The app will be available on `http://localhost:3000`.
+
+### 3. **Stopping the Containers**
+
+To stop and remove containers, networks, and volumes:
+
+```bash
+docker compose down
+```
+
+### 4. **Accessing the Application**
+
+- Once the containers are up, access the application at `http://localhost:3000`.
+- The backend API will be available at `http://localhost:3000/api`.
+
+### 5. **Database Access**
+
+- The PostgreSQL database can be accessed from the app using the hostname `db` (as defined in the Docker Compose file).
+- Default credentials:
+  - User: `postgres`
+  - Password: `your_db_password_here` (as defined in your `.env` file)
+
+### 6. **Notes**
+
+- Ensure that the ports used in the Docker Compose files are not in use by other services on your host machine.
+- For development, file changes are synced between the host and the container, enabling hot-reloading of the app.
+- In production, consider using a reverse proxy like Nginx for better performance and security.

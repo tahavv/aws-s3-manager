@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
     // Upload photo to S3 using shared logic
     const photoBuffer = Buffer.from(await photo.arrayBuffer());
     const photoKey = `profile-photos/${Date.now()}-${photo.name}`;
-    await uploadFile(process.env.NEXT_PUBLIC_S3_BUCKET_NAME!, photoKey, photoBuffer);
+    //await uploadFile(process.env.NEXT_PUBLIC_S3_BUCKET_NAME!, photoKey, photoBuffer);
 
     const photoUrl = `https://${process.env.NEXT_PUBLIC_S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${photoKey}`;
 
