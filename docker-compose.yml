@@ -1,0 +1,31 @@
+version: "3.9"
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        BUILD_ENV: production
+    env_file:
+      - .env.production
+    environment:
+      - NEXT_PUBLIC_ENV=production
+    container_name: aws-s3-uploader-app
+    restart: unless-stopped
+    depends_on:
+      - db
+  db:
+    image: postgres:15
+    container_name: aws-s3-uploader-db
+    restart: always
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    ports:
+      - "5555:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+volumes:
+  db_data:
+
