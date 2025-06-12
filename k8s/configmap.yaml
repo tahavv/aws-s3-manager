@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: aws-s3-manager-config
+  namespace: aws-s3-manager
+data:
+  NEXT_PUBLIC_ENV: "production"
+  NODE_ENV: "production"
+  PORT: "3000"
+  DB_HOST: "postgres-service"
+  DB_PORT: "5432"
